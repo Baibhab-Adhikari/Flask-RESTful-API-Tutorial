@@ -1,0 +1,17 @@
+# IDE folders
+.vscode/
+.idea/
+
+# macOS system files
+.DS_Store
+
+# Python cache and virtual environments
+__pycache__/
+.mypy_cache/
+.venv/
+
+# Flask environment files
+.flaskenv
+
+# Flask instance folder
+instance/
