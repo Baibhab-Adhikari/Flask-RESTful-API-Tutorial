@@ -1,7 +1,7 @@
 from db import db
 
 
-class User(db.Model):  # type: ignore
+class UserModel(db.Model):  # type: ignore
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
