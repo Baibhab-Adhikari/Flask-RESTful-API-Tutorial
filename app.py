@@ -4,7 +4,6 @@ Initializes Flask, Flask-Smorest, registers Blueprints, and sets up Swagger UI.
 """
 
 import os
-import secrets
 
 from flask import Flask
 from flask_jwt_extended import JWTManager
@@ -42,8 +41,8 @@ def create_app(db_url=None):  # db_url parameter for database configuration flex
     db.init_app(app)  # Initialize Flask-SQLAlchemy extension
     api = Api(app)  # Initialize Flask-Smorest
 
-    # Generate a random secret key for JWT signing.
-    app.config["JWT_SECRET_KEY"] = str(secrets.SystemRandom().getrandbits(128))
+    # secret key for JWT signing.
+    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
     # Initialize Flask-JWT-Extended extension for handling JSON Web Tokens.
     jwt = JWTManager(app)
 
