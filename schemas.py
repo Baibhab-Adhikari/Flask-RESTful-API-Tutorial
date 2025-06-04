@@ -60,3 +60,11 @@ class TagAndItemSchema(Schema):
     message = fields.Str()
     item = fields.Nested(ItemSchema)
     tag = fields.Nested(TagSchema)
+
+# User marshmallow schema
+
+
+class UserSchema(Schema):
+    id = fields.Int(dump_only=True)
+    username = fields.String(required=True)
+    password = fields.String(required=True)

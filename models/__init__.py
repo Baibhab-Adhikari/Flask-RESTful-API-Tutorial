@@ -8,3 +8,4 @@ from models.store import \
     StoreModel  # Imports the StoreModel class from the store.py file
 from models.tag import TagModel
 from models.item_tags import ItemsTags
+from models.user import User
