@@ -5,7 +5,7 @@ Initializes Flask, Flask-Smorest, registers Blueprints, and sets up Swagger UI.
 
 import os
 
-from flask import Flask
+from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
 from flask_smorest import Api  # type: ignore
 
@@ -46,6 +46,53 @@ def create_app(db_url=None):  # db_url parameter for database configuration flex
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
     # Initialize Flask-JWT-Extended extension for handling JSON Web Tokens.
     jwt = JWTManager(app)
+
+    # functions to handle JWT related errors
+
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        """Handles expired tokens. Called when JWT is expired."""
+        return (
+            jsonify({
+                "message": "The token has expired",
+                "error": "Token expired"
+            }),
+            401
+        )
+
+    @jwt.invalid_token_loader
+    def invalid_token_callback(error):
+        """Handles invalid/tampered tokens. Called when JWT is invalid"""
+        return (
+            jsonify({
+                "message": "Signature verification failed.",
+                "error": "Invalid token"
+            }),
+            401
+        )
+
+    @jwt.unauthorized_loader
+    def missing_token_callback(error):
+        """Handles missing tokens. Called when no JWT is present"""
+        return (
+            jsonify({
+                "description": "Request does not contain an access token.",
+                "error": "authorization_required."
+            }),
+            401
+        )
+
+    # JWT claims are pieces of information (e.g., user roles, permissions)
+    # encoded within the JWT payload. This function adds custom claims.
+    @jwt.additional_claims_loader
+    # 'identity' is the value passed to create_access_token
+    def add_claims_to_jwt(identity):
+        # This is a simplified check: user with ID 1 is considered an admin.
+        # In a real application, this logic would typically involve checking a database
+        # or a configuration file to determine a user's admin status.
+        if identity == 1:
+            return {"is admin": True}
+        return {"is admin": False}
 
     with app.app_context():  # Application context is required for database operations
         db.create_all()  # Create database tables based on models, if they don't exist
