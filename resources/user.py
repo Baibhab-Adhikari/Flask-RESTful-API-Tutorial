@@ -1,6 +1,7 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort  # type: ignore
 from passlib.hash import pbkdf2_sha256  # type: ignore
+from flask_jwt_extended import create_access_token
 
 from db import db
 from models import UserModel
@@ -16,7 +17,9 @@ class UserRegister(MethodView):
     def post(self, user_data):
 
         # check if user exists in DB
-        if UserModel.query.all(username=user_data["username"]).first():
+        if UserModel.query.filter(username=user_data["username"]).first():
+            # HTTP 409 Conflict: Indicates the request cannot be processed due to a conflict
+            # with the current state of the resource (e.g., username already exists).
             abort(409, exc="A user with that name already exists.")
 
         # if not, then hash pw and insert into DB
@@ -54,3 +57,22 @@ class User(MethodView):
         db.session.commit()
 
         return {"message": "User deleted"}, 200
+
+
+# user login class view
+@blp.route("/login")
+class UserLogin(MethodView):
+    @blp.arguments(UserSchema)
+    def post(self, user_data):
+        # find user in DB
+        user = UserModel.query.filter(
+            UserModel.username == user_data["username"]
+        ).first()
+
+        # check if user exist and password matches
+        if user and pbkdf2_sha256.verify(user_data["password"], user.password):
+            # create new access token and store the user.id field value
+            access_token = create_access_token(identity=str(user.id))
+            return {"access_token": access_token}, 200
+        # else report invalid credentials
+        abort(401, exc="Invalid credentials.")
