@@ -10,6 +10,7 @@ from flask_jwt_extended import JWTManager
 from flask_smorest import Api  # type: ignore
 
 from db import db
+from models import JWTBlocklist
 # Importing blueprints from the resources package
 from resources.item import blp as ItemBlueprint
 from resources.store import blp as StoreBlueprint
@@ -43,7 +44,11 @@ def create_app(db_url=None):  # db_url parameter for database configuration flex
     api = Api(app)  # Initialize Flask-Smorest
 
     # secret key for JWT signing.
-    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
+    jwt_secret = os.getenv("JWT_SECRET_KEY")
+    if not jwt_secret:
+        raise RuntimeError(
+            "JWT_SECRET_KEY environment variable is not set. Please set it before running the application.")
+    app.config["JWT_SECRET_KEY"] = jwt_secret
     # Initialize Flask-JWT-Extended extension for handling JSON Web Tokens.
     jwt = JWTManager(app)
 
@@ -98,13 +103,63 @@ def create_app(db_url=None):  # db_url parameter for database configuration flex
         Returns:
             dict: A dictionary of claims to add to the JWT payload
         """
-
+        print(
+            # DEBUG PRINT
+            f"DEBUG: add_claims_to_jwt received identity: {identity} (type: {type(identity)})")
         # This is a simplified check: user with ID 1 is considered an admin.
         # In a real application, this logic would typically involve checking a database
         # or a configuration file to determine a user's admin status.
-        if identity == 1:
+        if identity == "1":
             return {"is_admin": True}
         return {"is_admin": False}
+
+    # JWT blocklist config functions -> I am storing it in DB as a challenge
+
+    @jwt.token_in_blocklist_loader
+    def check_if_token_in_blocklist(jwt_header, jwt_payload):
+        """Checks if a token is in the blocklist.
+
+        This function is automatically called by Flask-JWT-Extended when 
+        a protected endpoint is accessed. It determines whether the token 
+        has been revoked (e.g., due to logout).
+
+        Args:
+            jwt_header: The header portion of the JWT
+            jwt_payload: The payload portion of the JWT containing claims
+
+        Returns:
+            bool: True if the token is blocklisted (revoked), False otherwise
+        """
+
+        # get jti from the payload of the current request
+        jti = jwt_payload["jti"]
+        result = JWTBlocklist.query.filter_by(
+            jti=jti).first()  # find the jti in blocklist table
+        return result is not None  # return True if not None.
+
+    @jwt.revoked_token_loader
+    def revoked_token_callback(jwt_header, jwt_payload):
+        """Handles revoked tokens.
+
+        This function is automatically called when a token is found in the 
+        blocklist. It returns an appropriate error response to the client
+        when they attempt to use a token that has been revoked (e.g., after logout).
+
+        Args:
+            jwt_header: The header portion of the JWT
+            jwt_payload: The payload portion of the JWT containing claims
+
+        Returns:
+            tuple: A response tuple containing an error message and HTTP 401 status code
+        """
+
+        return (
+            jsonify(
+                {"description": "The token has been revoked.",
+                    "error": "token_revoked"}
+            ),
+            401,
+        )
 
     with app.app_context():  # Application context is required for database operations
         db.create_all()  # Create database tables based on models, if they don't exist
