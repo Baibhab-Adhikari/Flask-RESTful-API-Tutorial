@@ -4,9 +4,9 @@
 
 from models.item import \
     ItemModel  # Imports the ItemModel class from the item.py file
+from models.item_tags import ItemsTags
+from models.jwt_blocklist import JWTBlocklist
 from models.store import \
     StoreModel  # Imports the StoreModel class from the store.py file
 from models.tag import TagModel
-from models.item_tags import ItemsTags
 from models.user import UserModel
-from models.jwt_blocklist import JWTBlocklist

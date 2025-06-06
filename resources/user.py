@@ -1,13 +1,13 @@
 from flask.views import MethodView
+from flask_jwt_extended import (create_access_token, create_refresh_token,
+                                get_jwt, get_jwt_identity, jwt_required)
 from flask_smorest import Blueprint, abort  # type: ignore
 from passlib.hash import pbkdf2_sha256  # type: ignore
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt
-
-from db import db
-from models import UserModel, JWTBlocklist
-from schemas import UserSchema
 from sqlalchemy.exc import SQLAlchemyError
 
+from db import db
+from models import JWTBlocklist, UserModel
+from schemas import UserSchema
 
 blp = Blueprint("Users", "users", "Operations on API users.")
 
