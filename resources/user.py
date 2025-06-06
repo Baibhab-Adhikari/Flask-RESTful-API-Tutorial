@@ -1,11 +1,12 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort  # type: ignore
 from passlib.hash import pbkdf2_sha256  # type: ignore
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt
 
 from db import db
-from models import UserModel
+from models import UserModel, JWTBlocklist
 from schemas import UserSchema
+from sqlalchemy.exc import SQLAlchemyError
 
 
 blp = Blueprint("Users", "users", "Operations on API users.")
@@ -17,7 +18,7 @@ class UserRegister(MethodView):
     def post(self, user_data):
 
         # check if user exists in DB
-        if UserModel.query.filter(username=user_data["username"]).first():
+        if UserModel.query.filter(UserModel.username == user_data["username"]).first():
             # HTTP 409 Conflict: Indicates the request cannot be processed due to a conflict
             # with the current state of the resource (e.g., username already exists).
             abort(409, exc="A user with that name already exists.")
@@ -38,7 +39,7 @@ class UserRegister(MethodView):
 
 # USER RESOURCE FOR TESTING ONLY -> NOT FOR PUBLIC
 
-@blp.route("/user/<int: user_id>")
+@blp.route("/user/<int:user_id>")
 class User(MethodView):
     """
     This resource can be useful when testing our Flask app.
@@ -76,3 +77,18 @@ class UserLogin(MethodView):
             return {"access_token": access_token}, 200
         # else report invalid credentials
         abort(401, exc="Invalid credentials.")
+
+
+# user logout class view
+@blp.route("/logout")
+class UserLogout(MethodView):
+    @jwt_required()
+    def post(self):
+        jti = get_jwt()["jti"]  # get the JWT ID claim from the token
+        blocked_jwt = JWTBlocklist(jti=jti)
+        try:
+            db.session.add(blocked_jwt)
+            db.session.commit()
+            return {"message": "Logout successful"}
+        except SQLAlchemyError as e:
+            abort(400, exc=str(e))
