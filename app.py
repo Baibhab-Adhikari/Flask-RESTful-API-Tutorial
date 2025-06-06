@@ -161,6 +161,35 @@ def create_app(db_url=None):  # db_url parameter for database configuration flex
             401,
         )
 
+    # token refresh error handler
+    @jwt.needs_fresh_token_loader
+    def token_not_fresh_callback(jwt_header, jwt_payload):
+        """Handles attempts to access fresh-token-required endpoints with a non-fresh token.
+
+        This callback is triggered by Flask-JWT-Extended when a route decorated
+        with `@jwt_required(fresh=True)` is accessed using an access token
+        that is valid but not "fresh" (i.e., it was not generated from
+        direct credential authentication in the current session, such as a token
+        obtained via a refresh token).
+
+        Args:
+            jwt_header (dict): The header part of the JWT.
+            jwt_payload (dict): The payload part of the JWT.
+
+        Returns:
+            tuple: A Flask response tuple containing a JSON error message
+                   and an HTTP 401 Unauthorized status code.
+        """
+        return (
+            jsonify(
+                {
+                    "description": "The token is not fresh. User needs to re-authenticate.",
+                    "error": "fresh_token_required",
+                }
+            ),
+            401,  # HTTP 401 Unauthorized status code
+        )
+
     with app.app_context():  # Application context is required for database operations
         db.create_all()  # Create database tables based on models, if they don't exist
 

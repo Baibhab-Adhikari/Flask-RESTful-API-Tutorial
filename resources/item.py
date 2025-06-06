@@ -1,6 +1,3 @@
-import uuid
-
-from flask import request
 from flask.views import MethodView
 from flask_jwt_extended import get_jwt, jwt_required
 from flask_smorest import Blueprint, abort  # type: ignore
@@ -73,7 +70,7 @@ class Item(MethodView):  # contains all HTTP methods (mapped to the methods) for
 
 @blp.route("/item")
 class ItemList(MethodView):
-    @jwt_required()
+    @jwt_required(fresh=True)  # this endpoint requires a fresh token
     # many=True indicates that the response will be a list of items!
     @blp.response(200, ItemSchema(many=True))
     # Handles GET requests to /item
