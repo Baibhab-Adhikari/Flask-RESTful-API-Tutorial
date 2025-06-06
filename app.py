@@ -87,12 +87,24 @@ def create_app(db_url=None):  # db_url parameter for database configuration flex
     @jwt.additional_claims_loader
     # 'identity' is the value passed to create_access_token
     def add_claims_to_jwt(identity):
+        """Adds custom claims to JWT tokens when they are created.
+
+        This function determines if a user has admin privileges based on their ID.
+        It's called automatically whenever a new JWT token is generated.
+
+        Args:
+            identity: The user identifier (typically user.id) passed to create_access_token()
+
+        Returns:
+            dict: A dictionary of claims to add to the JWT payload
+        """
+
         # This is a simplified check: user with ID 1 is considered an admin.
         # In a real application, this logic would typically involve checking a database
         # or a configuration file to determine a user's admin status.
         if identity == 1:
-            return {"is admin": True}
-        return {"is admin": False}
+            return {"is_admin": True}
+        return {"is_admin": False}
 
     with app.app_context():  # Application context is required for database operations
         db.create_all()  # Create database tables based on models, if they don't exist
@@ -101,6 +113,6 @@ def create_app(db_url=None):  # db_url parameter for database configuration flex
     api.register_blueprint(ItemBlueprint)
     api.register_blueprint(StoreBlueprint)
     api.register_blueprint(TagBlueprint)
-    app.register_blueprint(UserBlueprint)
+    api.register_blueprint(UserBlueprint)
 
     return app
