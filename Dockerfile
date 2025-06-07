@@ -1,24 +1,30 @@
-# Use an official Python runtime as a parent image
+# Use an official Python runtime as a parent image.
+# python:3.13-alpine uses a specific version of Python on a lightweight Alpine Linux base.
 FROM python:3.13-alpine
 
-# Make port 5000 available to the world outside this container
+# Inform Docker that the container listens on port 5000 at runtime.
+# Note: This does not actually publish the port. Publishing is done with `docker run -p`.
 EXPOSE 5000
 
-# Set the working directory in the container
+# Set the working directory for subsequent instructions in the container.
+# If the directory doesn't exist, it will be created.
 WORKDIR /app
 
-# Copy the requirements file into the container at /app
+# Copy the requirements.txt file from the host to the /app directory in the container.
 COPY ./requirements.txt requirements.txt
 
-# Install any needed packages specified in requirements.txt
-# --no-cache-dir: Disables the cache to reduce image size
-# --upgrade: Upgrades packages to the newest versions
+# Install Python dependencies specified in requirements.txt.
+# --no-cache-dir: Disables the pip cache to reduce image layer size.
+# --upgrade: Ensures packages and their dependencies are upgraded to the latest allowed versions.
+# -r requirements.txt: Specifies the file containing the list of packages to install.
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-# Copy the current directory contents into the container at /app
+# Copy the rest of the application's source code from the host's current directory
+# into the /app directory in the container.
 COPY . .
 
-# Run the application using Gunicorn
-# --bind 0.0.0.0:80: Binds Gunicorn to all network interfaces on port 80 inside the container
-# app:create_app(): Specifies the WSGI application object (the create_app factory in app.py)
-CMD ["gunicorn","--bind","0.0.0.0:80", "app:create_app()"]
+# Specify the command to run when the container starts.
+# This executes the docker-entrypoint.sh script using /bin/bash.
+# The entrypoint script typically handles tasks like database migrations
+# before starting the main application process.
+CMD ["/bin/bash", "docker-entrypoint.sh"]
