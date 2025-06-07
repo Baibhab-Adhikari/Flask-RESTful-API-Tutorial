@@ -5,6 +5,7 @@ Initializes Flask, Flask-Smorest, registers Blueprints, and sets up Swagger UI.
 
 import os
 
+from dotenv import load_dotenv
 from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate  # type: ignore
@@ -23,6 +24,8 @@ def create_app(db_url=None):  # db_url parameter for database configuration flex
     """Flask application factory pattern."""
 
     app = Flask(__name__)  # Initialize Flask app
+    # load env vars from the .env file
+    load_dotenv()
 
     # Configure Flask app
 
