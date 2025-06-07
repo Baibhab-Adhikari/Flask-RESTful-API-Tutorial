@@ -42,7 +42,7 @@ def create_app(db_url=None):  # db_url parameter for database configuration flex
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     db.init_app(app)  # Initialize Flask-SQLAlchemy extension
-    Migrate(app, db)  # Initialize Flask-Migrate extension
+    migrate = Migrate(app, db)  # Initialize Flask-Migrate extension
     api = Api(app)  # Initialize Flask-Smorest
 
     # secret key for JWT signing.
@@ -105,9 +105,6 @@ def create_app(db_url=None):  # db_url parameter for database configuration flex
         Returns:
             dict: A dictionary of claims to add to the JWT payload
         """
-        print(
-            # DEBUG PRINT
-            f"DEBUG: add_claims_to_jwt received identity: {identity} (type: {type(identity)})")
         # This is a simplified check: user with ID 1 is considered an admin.
         # In a real application, this logic would typically involve checking a database
         # or a configuration file to determine a user's admin status.
