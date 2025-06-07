@@ -1,6 +1,5 @@
 # Use an official Python runtime as a parent image.
-# python:3.13-alpine uses a specific version of Python on a lightweight Alpine Linux base.
-FROM python:3.13-alpine
+FROM python:3.13
 
 # Inform Docker that the container listens on port 5000 at runtime.
 # Note: This does not actually publish the port. Publishing is done with `docker run -p`.
