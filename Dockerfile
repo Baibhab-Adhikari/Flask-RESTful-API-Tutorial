@@ -23,6 +23,9 @@ RUN pip install --no-cache-dir --upgrade -r requirements.txt
 # into the /app directory in the container.
 COPY . .
 
+# Make the entrypoint script executable
+RUN chmod +x docker-entrypoint.sh
+
 # Specify the command to run when the container starts.
 # This executes the docker-entrypoint.sh script using /bin/bash.
 # The entrypoint script typically handles tasks like database migrations
