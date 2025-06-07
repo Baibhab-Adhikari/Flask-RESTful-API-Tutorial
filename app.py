@@ -7,6 +7,7 @@ import os
 
 from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
+from flask_migrate import Migrate  # type: ignore
 from flask_smorest import Api  # type: ignore
 
 from db import db
@@ -41,6 +42,7 @@ def create_app(db_url=None):  # db_url parameter for database configuration flex
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     db.init_app(app)  # Initialize Flask-SQLAlchemy extension
+    Migrate(app, db)  # Initialize Flask-Migrate extension
     api = Api(app)  # Initialize Flask-Smorest
 
     # secret key for JWT signing.
@@ -189,9 +191,9 @@ def create_app(db_url=None):  # db_url parameter for database configuration flex
             ),
             401,  # HTTP 401 Unauthorized status code
         )
-
-    with app.app_context():  # Application context is required for database operations
-        db.create_all()  # Create database tables based on models, if they don't exist
+    # now these two lines are not needed for DB creation, since we will do that using flask-migrate now
+    # with app.app_context():  # Application context is required for database operations
+    #     db.create_all()  # Create database tables based on models, if they don't exist
 
     # Register blueprints for API resources
     api.register_blueprint(ItemBlueprint)
