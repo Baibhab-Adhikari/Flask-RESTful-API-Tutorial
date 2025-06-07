@@ -101,7 +101,7 @@ class UserLogin(MethodView):
             # Create a new JWT refresh token, also using the user's ID as identity.
             # Refresh tokens are typically longer-lived and used to obtain new access tokens.
             # Pass user.id directly, it will be handled.
-            refresh_token = create_refresh_token(identity=user.id)
+            refresh_token = create_refresh_token(identity=str(user.id))
             # Return both the access token and the refresh token.
             return {"access_token": access_token, "refresh_token": refresh_token}, 200
 
